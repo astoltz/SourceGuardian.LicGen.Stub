@@ -1,0 +1,84 @@
+﻿name: .NET Build & Publish
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  PACKAGE_VERSION: '1.0.0'
+
+jobs:
+  # ----------------------------
+  # Build & Publish (Linux)
+  # ----------------------------
+  build-linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore
+        run: dotnet restore --runtime linux-x64
+        working-directory: SourceGuardian.LicGen.Stub
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore --runtime linux-x64
+        working-directory: SourceGuardian.LicGen.Stub
+
+      - name: Publish (Linux x64)
+        run: |
+          dotnet publish --configuration Release \
+            --runtime linux-x64 \
+            --self-contained true \
+            --no-restore \
+            -o publish/linux-x64
+        working-directory: SourceGuardian.LicGen.Stub
+
+      - name: Upload Linux Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: licgen-linux-x64
+          path: SourceGuardian.LicGen.Stub/publish/linux-x64/
+
+  # ----------------------------
+  # Build & Publish (Windows)
+  # ----------------------------
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore
+        run: dotnet restore --runtime win-x64
+        working-directory: SourceGuardian.LicGen.Stub
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore --runtime win-x64
+        working-directory: SourceGuardian.LicGen.Stub
+
+      - name: Publish (Windows x64)
+        run: dotnet publish --configuration Release --runtime win-x64 --self-contained true --no-restore -o publish/win-x64
+        working-directory: SourceGuardian.LicGen.Stub
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: licgen-win-x64
+          path: SourceGuardian.LicGen.Stub/publish/win-x64/
